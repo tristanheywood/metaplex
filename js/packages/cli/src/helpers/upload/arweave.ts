@@ -25,6 +25,7 @@ export async function arweaveUpload(
   anchorProgram,
   env,
   image,
+  video,
   manifestBuffer,
   manifest,
   index,
@@ -54,6 +55,10 @@ export async function arweaveUpload(
   data.append('file[]', fs.createReadStream(image), {
     filename: `image.png`,
     contentType: 'image/png',
+  });
+  data.append('file[]', fs.createReadStream(video), {
+    filename: `video.mp4`,
+    contentType: 'video/mp4',
   });
   data.append('file[]', manifestBuffer, 'metadata.json');
 

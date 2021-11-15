@@ -1,4 +1,4 @@
-import { EXTENSION_PNG } from '../helpers/constants';
+import { EXTENSION_MP4, EXTENSION_PNG } from '../helpers/constants';
 import path from 'path';
 import {
   createConfig,
@@ -45,10 +45,17 @@ export async function upload(
   const seen = {};
   const newFiles = [];
 
+  const seenVideos = {};
+  const newVideoFiles = [];
+
   files.forEach(f => {
     if (!seen[f.replace(EXTENSION_PNG, '').split('/').pop()]) {
       seen[f.replace(EXTENSION_PNG, '').split('/').pop()] = true;
       newFiles.push(f);
+    }
+    if (!seenVideos[f.replace(EXTENSION_MP4, '').split('/').pop()]) {
+      seenVideos[f.replace(EXTENSION_MP4, '').split('/').pop()] = true;
+      newVideoFiles.push(f);
     }
   });
   existingInCache.forEach(f => {
@@ -56,9 +63,14 @@ export async function upload(
       seen[f] = true;
       newFiles.push(f + '.png');
     }
+    if (!seenVideos[f]) {
+      seenVideos[f] = true;
+      newVideoFiles.push(f + ".mp4");
+    }
   });
 
   const images = newFiles.filter(val => path.extname(val) === EXTENSION_PNG);
+  const videos = newFiles.filter(val => path.extname(val) === EXTENSION_MP4);
   const SIZE = images.length;
 
   const walletKeyPair = loadWalletKey(keypair);
@@ -73,6 +85,10 @@ export async function upload(
     const imageName = path.basename(image);
     const index = imageName.replace(EXTENSION_PNG, '');
 
+    const video = videos[i];
+    const videoName = path.basename(video);
+    const videoIndex = videoName.replace(EXTENSION_MP4, '');
+
     log.debug(`Processing file: ${i}`);
     if (i % 50 === 0) {
       log.info(`Processing file: ${i}`);
@@ -85,7 +101,9 @@ export async function upload(
         .readFileSync(manifestPath)
         .toString()
         .replace(imageName, 'image.png')
-        .replace(imageName, 'image.png');
+        .replace(imageName, 'image.png')
+        .replace(videoName, 'video.mp4')
+        .replace(videoName, 'video.mp4')
       const manifest = JSON.parse(manifestContent);
 
       const manifestBuffer = Buffer.from(JSON.stringify(manifest));
@@ -132,6 +150,7 @@ export async function upload(
               anchorProgram,
               env,
               image,
+              video,
               manifestBuffer,
               manifest,
               index,
